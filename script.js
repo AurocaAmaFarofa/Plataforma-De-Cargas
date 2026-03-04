@@ -40,10 +40,9 @@ const cargasDisponiveis = [
         empresa: "ModaLeve",
         data: "20/11/2025"
     },
-    // Você pode adicionar mais dados aqui para demonstração
 ];
 
-// --- 2. Função para Gerar o HTML do Card de Carga ---
+//Gerar o HTML do Card de Carga
 function criarCardCarga(carga) {
     return `
         <div class="card-carga">
@@ -60,7 +59,6 @@ function criarCardCarga(carga) {
     `;
 }
 
-// --- 3. Função Principal de Renderização ---
 function renderizarCargas(cargas) {
     const container = document.getElementById('cargas-list');
     container.innerHTML = ''; // Limpa a mensagem de carregamento ou resultados anteriores
@@ -75,7 +73,7 @@ function renderizarCargas(cargas) {
     });
 }
 
-// --- 4. Função de Busca (acionada pelo botão ou Enter) ---
+//Função de Busca
 function buscarCargas() {
     const input = document.getElementById('searchInput');
     // Converte a busca para minúsculas e remove espaços para facilitar a comparação
@@ -98,16 +96,15 @@ function buscarCargas() {
     renderizarCargas(resultados);
 }
 
-// --- 5. Função de Simulação de Negociação (MVP 2 - Chat/Aceite) ---
+//Função de Simulação de Negociação
 function simularNegociacao(cargaId) {
     const carga = cargasDisponiveis.find(c => c.id === cargaId);
     if (carga) {
-        // Simula o chat com um alerta simples (substitua isso pela interface de chat!)
-        alert(`NEGOCIAÇÃO INICIADA: Você está entrando em contato com a empresa ${carga.empresa} para o frete de ${carga.tipo} (R$ ${carga.valor}).\n\n[SIMULAÇÃO]: A empresa aceitou sua proposta e enviará os detalhes por e-mail!`);
+        alert(`NEGOCIAÇÃO INICIADA: Você está entrando em contato com a empresa ${carga.empresa} para o frete de ${carga.tipo} (R$ ${carga.valor}).\n\n A empresa aceitou sua proposta e enviará os detalhes por e-mail!`);
     }
 }
 
-// --- 6. Inicialização (Mostra todas as cargas ao carregar a página) ---
+//Inicialização
 window.onload = () => {
     // Adiciona o evento de 'Enter' na barra de busca
     document.getElementById('searchInput').addEventListener('keyup', (event) => {
