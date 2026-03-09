@@ -1,4 +1,3 @@
-// --- 1. Dados Fictícios (Simulando um Banco de Dados) ---
 const cargasDisponiveis = [
     {
         id: 1,
@@ -39,6 +38,16 @@ const cargasDisponiveis = [
         valor: "R$ 1.200,00",
         empresa: "ModaLeve",
         data: "20/11/2025"
+    },
+    {
+        id: 5,
+        origem: "Aparecida de Goiânia - GO",
+        destino: "Porto Velho - RO",
+        tipo: "Farinha",
+        peso: "35 ton",
+        valor: "R$ 100.000,00",
+        empresa: "Moinho Vitória",
+        data: "26/11/2025"
     },
 ];
 
