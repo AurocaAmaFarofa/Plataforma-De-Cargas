@@ -22,16 +22,21 @@
     <header>
         <div class="logo">CargaFácil</div>
         <nav>
-            <a href="index.html" class="active"><i class="fas fa-truck-loading"></i> Cargas</a>
+            <a href="index.html"><i class="fas fa-truck-loading"></i> Cargas</a>
             <a href="historico.html"><i class="fas fa-history"></i> Histórico</a>
             <a href="login.html"><i class="fas fa-user-circle"></i> Login</a>
         </nav>
     </header>
 
     <main>
+
         <h1>Histórico de Fretes Realizados</h1>
+
+        <div class="botao-container">
+            <button onclick="limparHistorico()" class="BotãoDeApagar"> Limpar Histórico </button>
+        </div>
         
-        <div class="historico">
+        <div id="historico-container" class="container-cargas">
 
         </div>
 
@@ -39,9 +44,3 @@
 
     <script src="script.js"></script>
 </body>
-</html>
-    <script  src="./script.js"></script>
-
-  </body>
-  
-</html>
