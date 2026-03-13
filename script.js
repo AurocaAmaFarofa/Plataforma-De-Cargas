@@ -1,4 +1,5 @@
-const cargasDisponiveis = [
+// lista inicial usada como fallback caso não haja nada no localStorage
+const defaultCargas = [
     {
         id: 1,
         origem: "Dionísio Cerqueira - SC",
@@ -61,10 +62,29 @@ const cargasDisponiveis = [
     },
 ];
 
+// variável que será manipulada em runtime e armazenada no localStorage
+let cargasDisponiveis = [];
+
+function carregarCargasDisponiveis() {
+    const armazenadas = JSON.parse(localStorage.getItem("cargasDisponiveis") || "null");
+    if (Array.isArray(armazenadas) && armazenadas.length > 0) {
+        cargasDisponiveis = armazenadas;
+    } else {
+        // cópia para não alterar o array padrão
+        cargasDisponiveis = [...defaultCargas];
+    }
+}
+
+function salvarCargasDisponiveis() {
+    localStorage.setItem("cargasDisponiveis", JSON.stringify(cargasDisponiveis));
+}
+
 // Quando a página carrega, faz tudo funcionar
 window.onload = () => {
     verificarProtecao(); 
     ajustarHeader();
+
+    carregarCargasDisponiveis();
 
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -82,24 +102,6 @@ window.onload = () => {
     carregarHistorico();
 };
 
-// Cria um card (caixa) com os dados de uma carga
-function criarCardCarga(carga) {
-    return `
-        <div class="card-carga">
-            <h3><i class="fas fa-box"></i> ${carga.tipo}</h3>
-            <p><span class="origem-destino">${carga.origem}</span> <i class="fas fa-arrow-right"></i> <span class="origem-destino">${carga.destino}</span></p>
-            <p>Peso: <strong>${carga.peso}</strong></p>
-            <p>Empresa: ${carga.empresa}</p>
-            <p>Data Limite: ${carga.data}</p>
-            <div class="valor">
-                Frete: ${carga.valor}
-            </div>
-            <button onclick='negociarCarga(${JSON.stringify(carga)})'>
-            Negociar Carga
-            </button>
-        </div>
-    `;
-}
 
 // Monta os cards das cargas e coloca elas na tela
 function renderizarCargas(cargas) {
@@ -202,14 +204,14 @@ function converterValorParaNumero(valorTexto) {
 
 function criarCardCarga(carga) {
     const valorNumerico = converterValorParaNumero(carga.valor);
-    let corValor = "#28a745";
+    let corValor = "var(--primary-color)";
     let estiloExtra = "";
 
     if (valorNumerico >= 1000000) {
-        corValor = "#d4af37";
+        corValor = "#000000"; // verde para valores milionários)";
         estiloExtra = "font-weight: bold; font-size: 1.2em;";
     } else if (valorNumerico >= 100000) {
-        corValor = "#ff8c00";
+        corValor = "#4193ff"; // laranja para valores altos, mas não milionários
     }
 
     return `
@@ -222,11 +224,34 @@ function criarCardCarga(carga) {
             <div class="valor" style="color: ${corValor}; ${estiloExtra}">
                 <i class="fas fa-coins"></i> Frete: ${carga.valor}
             </div>
-            <button onclick='negociarCarga(${JSON.stringify(carga)})'>
+            <button onclick="negociarCargaPorId(${carga.id})">
                 <i class="fas fa-handshake"></i> Negociar Carga
+            </button>
+            <button class="remover-btn" onclick="removerCarga(${carga.id})" title="Remover esta carga">
+                <i class="fas fa-trash-alt"></i>
             </button>
         </div>
     `;
+}
+
+// busca carga por id e delega para negociarCarga
+function negociarCargaPorId(id) {
+    const carga = cargasDisponiveis.find(c => c.id === id);
+    if (carga) {
+        negociarCarga(carga);
+    } else {
+        console.warn("Carga não encontrada para negociação", id);
+    }
+}
+// remove carga pela id e atualiza a lista e o armazenamento
+function removerCarga(id) {
+    if (!confirm("Tem certeza que deseja remover esta carga?")) return;
+    cargasDisponiveis = cargasDisponiveis.filter(c => c.id !== id);
+    salvarCargasDisponiveis();
+    // se estiver na página principal, atualiza a renderização
+    if (document.getElementById('cargas-list')) {
+        renderizarCargas(cargasDisponiveis);
+    }
 }
 
 // Faz login: pega o usuário e senha, verifica se estão corretos
@@ -237,11 +262,28 @@ function realizarLogin() {
     if(usuario === "motorista@teste.com" && senha === "123456") {
         localStorage.setItem("logado", "true");
         localStorage.setItem("usuario", usuario);
-        alert("Login realizado com sucesso!");
         window.location.href = "index.html";
+        popupLoginSucesso();
+        setTimeout(() => { window.location.href = "index.html"; }, 1500);
     } else {
-        alert("Usuário ou senha incorretos! // Tente: motorista@teste.com / 123456");
+        popupLoginErrado("Usuário ou senha incorretos! // Tente: motorista@teste.com / 123456");
+            return;
     }
+}
+
+function popupLoginErrado(texto) {
+    let popup = document.getElementById('popup-message');
+    if (!popup) {
+        popup = document.createElement('div');
+        popup.id = 'popup-message';
+        popup.className = 'popup';
+        document.body.appendChild(popup);
+    }
+    popup.textContent = texto;
+    popup.classList.add('visible');
+    setTimeout(() => {
+        popup.classList.remove('visible');
+    }, 3000);
 }
 
 // Faz logout: apaga os dados do usuário e volta para a página de login
@@ -278,8 +320,82 @@ function ajustarHeader() {
         logoutLink.style.borderRadius = '5px';
         logoutLink.style.transition = 'background-color 0.3s';
         logoutLink.style.backgroundColor = 'var(--secondary-color)';
-        logoutLink.onmouseover = () => logoutLink.style.backgroundColor = 'var(--primary-color)';
+        logoutLink.onmouseover = () => logoutLink.style.backgroundColor = 'var(--tercery-color)';
         logoutLink.onmouseout = () => logoutLink.style.backgroundColor = 'var(--secondary-color)';
         header.appendChild(logoutLink);
+    }
+}
+
+function adicionarCarga(event) {
+    if (event) event.preventDefault();
+
+    let origem = document.getElementById("inputOrigem").value.trim();
+    let destino = document.getElementById("inputDestino").value.trim();
+    const tipo = document.getElementById("inputTipo").value.trim();
+    const pesoKg = document.getElementById("inputPeso").value.trim();
+    const dataLimiteRaw = document.getElementById("inputData").value;
+    const valor = document.getElementById("inputValor").value.trim();
+    const empresa = document.getElementById("inputEmpresa").value.trim();
+
+    if (!origem || !destino || !tipo || !pesoKg || !valor || !empresa || !dataLimiteRaw) {
+        alert("Por favor, preencha todos os campos para adicionar a carga.");
+        return;
+    }
+
+    // garante formato "Cidade - Estado" (substitui vírgula ou barra por traço)
+    origem = origem.replace(/,|\//g, ' - ').replace(/\s+-\s+/g, ' - ');
+    destino = destino.replace(/,|\//g, ' - ').replace(/\s+-\s+/g, ' - ');
+
+    // converte kg para toneladas com três casas mínimas
+    const pesoTon = (parseFloat(pesoKg) / 1000);
+    const pesoStr = `${pesoTon.toFixed(3).replace(/\.0+$/,'').replace(/\.(\d*?)0+$/,'.$1')} ton`;
+
+    const dt = new Date(dataLimiteRaw);
+    const dataLimite = dt.toLocaleDateString('pt-BR');
+
+    const novaCarga = {
+        id: Date.now(),
+        origem,
+        destino,
+        tipo,
+        peso: pesoStr,
+        valor: `R$ ${parseFloat(valor).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+        empresa,
+        data: dataLimite
+    };
+
+    cargasDisponiveis.push(novaCarga);
+    salvarCargasDisponiveis();
+
+    mostrarPopup("Carga adicionada com sucesso!");
+    // após 1,5s, volta para a lista
+    setTimeout(() => { window.location.href = "index.html"; }, 1500);
+}
+
+// cria ou reutiliza elemento de popup para mensagens breves
+function mostrarPopup(texto) {
+    let popup = document.getElementById('popup-message');
+    if (!popup) {
+        popup = document.createElement('div');
+        popup.id = 'popup-message';
+        popup.className = 'popup';
+        document.body.appendChild(popup);
+    }
+    popup.textContent = texto;
+    popup.classList.add('visible');
+    setTimeout(() => {
+        popup.classList.remove('visible');
+    }, 1400);
+}
+
+function popupLoginSucesso() {
+    const messageDiv = document.getElementById("LoginSucesso");
+    if (messageDiv) {
+        messageDiv.textContent = "Login realizado com sucesso!";
+        messageDiv.classList.add("success");
+        setTimeout(() => {
+            messageDiv.textContent = "";
+            messageDiv.classList.remove("success");
+        }, 2000);
     }
 }
